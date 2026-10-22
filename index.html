@@ -6,35 +6,93 @@
 <meta name="theme-color" content="#0f172a">
 <title>Análisis de postura · Tenis</title>
 <style>
-  :root { --bg:#0f172a; --panel:#1e293b; --txt:#e2e8f0; --ok:#22c55e; --aviso:#fbbf24; --btn:#334155; }
+  :root { --bg:#0f172a; --panel:#1e293b; --txt:#e2e8f0; --ok:#22c55e; --aviso:#fbbf24; --mal:#f87171; --ref:#38bdf8; --btn:#334155; }
   * { box-sizing: border-box; }
   body {
-    margin: 0 auto; max-width: 900px; padding: 12px;
+    margin: 0 auto; max-width: 1400px; padding: 12px;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     background: var(--bg); color: var(--txt);
   }
-  h1 { font-size: 1.15rem; margin: 4px 0 10px; }
-  h2 { font-size: 1rem; margin: 16px 0 6px; }
+  h1 { font-size: 1.25rem; margin: 4px 0 10px; }
+  h2 { font-size: 1.05rem; margin: 0 0 8px; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; }
   select { font-size: 1rem; padding: 10px; border-radius: 10px; border: 1px solid #475569; background: var(--panel); color: var(--txt); }
-  button { font-size: 1rem; font-weight: 600; padding: 14px 10px; border: 0; border-radius: 12px; background: var(--btn); color: #fff; cursor: pointer; }
+  button { font-size: .95rem; font-weight: 600; padding: 12px 8px; border: 0; border-radius: 12px; background: var(--btn); color: #fff; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: wait; }
   button.ok { background: var(--ok); color: #052e16; }
-  #stage { position: relative; width: 100%; margin: 10px 0; background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; }
-  #stage video, #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-  #stage.front video { transform: scaleX(-1); }   /* espejo solo para la cámara frontal */
-  #stage canvas { pointer-events: none; }         /* que no tape los controles del video */
-  #vacio { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-align: center; padding: 16px; }
-  #status { min-height: 1.4em; color: var(--aviso); font-size: .95rem; margin: 6px 0; }
-  .angulos { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; background: var(--panel); padding: 12px; border-radius: 12px; font-variant-numeric: tabular-nums; font-size: .95rem; }
-  .angulos .sep { grid-column: 1 / -1; margin-top: 6px; color: var(--aviso); font-weight: 600; }
-  textarea { width: 100%; min-height: 220px; font: inherit; font-size: .9rem; padding: 10px; border-radius: 12px; border: 1px solid #475569; background: var(--panel); color: var(--txt); }
-  @media (min-width: 700px) { .botones { grid-template-columns: repeat(3, 1fr); } }
+  button.ref { background: var(--ref); color: #082f49; }
+  button.grande { width: 100%; font-size: 1.15rem; padding: 16px; margin: 12px 0 6px; }
+
+  /* Guía de uso */
+  details.ayuda { background: var(--panel); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; border-left: 4px solid var(--aviso); }
+  details.ayuda summary { cursor: pointer; font-weight: 700; }
+  details.ayuda ol, details.ayuda ul { margin: 8px 0; padding-left: 22px; line-height: 1.5; font-size: .93rem; }
+  details.ayuda h3 { font-size: .95rem; margin: 12px 0 0; color: var(--aviso); }
+  .c-ref { color: var(--ref); font-weight: 700; } .c-usr { color: var(--ok); font-weight: 700; }
+
+  /* Dos paneles lado a lado: referencia a la izquierda, video a analizar a la derecha */
+  .comparador { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; align-items: start; }
+  @media (max-width: 559px) { .comparador { grid-template-columns: 1fr; } }   /* en pantallas muy angostas se apilan */
+  .panel { background: var(--panel); border-radius: 14px; padding: 10px; min-width: 0; }
+  .panel.izq { border-top: 4px solid var(--ref); }
+  .panel.der { border-top: 4px solid var(--ok); }
+  .botones { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; }
+  .stage { position: relative; width: 100%; margin: 8px 0; background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 4 / 3; max-height: 70vh; }
+  .stage video, .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .stage.front video { transform: scaleX(-1); }   /* espejo solo para la cámara frontal */
+  .stage canvas { pointer-events: none; }         /* que no tape los controles del video */
+  .vacio { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #94a3b8; text-align: center; padding: 16px; font-size: .9rem; }
+  .st { min-height: 1.4em; color: var(--aviso); font-size: .88rem; margin: 4px 0; }
+  .angulos { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; font-variant-numeric: tabular-nums; font-size: .82rem; background: #0f172a; padding: 8px; border-radius: 10px; }
+
+  .controles { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; margin-top: 10px; }
+  .controles button { padding: 10px 14px; }
+  .controles label { flex-direction: row; align-items: center; gap: 6px; }
+  .controles select { padding: 8px; font-size: .9rem; }
+
+  #estado { min-height: 1.4em; color: var(--aviso); font-size: .95rem; margin: 6px 0; text-align: center; }
+
+  /* Resultados */
+  #resultados { background: var(--panel); border-radius: 14px; padding: 14px; margin-top: 10px; }
+  #resultados .vacioRes { color: #94a3b8; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .9rem; margin: 8px 0; }
+  th, td { padding: 7px 6px; text-align: right; border-bottom: 1px solid #334155; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: #94a3b8; font-weight: 600; font-size: .8rem; }
+  .tabla-scroll { overflow-x: auto; }
+  .nv-ok { color: var(--ok); font-weight: 700; } .nv-medio { color: var(--aviso); font-weight: 700; } .nv-alto { color: var(--mal); font-weight: 700; } .nv-nd { color: #94a3b8; }
+  .reco { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 8px; }
+  .reco li { background: #0f172a; border-radius: 10px; padding: 10px 12px; border-left: 4px solid; font-size: .93rem; line-height: 1.45; }
+  .reco li.medio { border-color: var(--aviso); } .reco li.alto { border-color: var(--mal); } .reco li.ok { border-color: var(--ok); }
+  .nota { color: #94a3b8; font-size: .82rem; margin-top: 8px; }
+  textarea { width: 100%; min-height: 200px; font: inherit; font-size: .9rem; padding: 10px; border-radius: 12px; border: 1px solid #475569; background: var(--panel); color: var(--txt); }
 </style>
 </head>
 <body>
 
 <h1>Análisis de postura · Tenis de mesa y de campo</h1>
+
+<details class="ayuda" open>
+  <summary>📖 Cómo usar este programa (clic para ocultar / mostrar)</summary>
+  <ol>
+    <li><b>Elige el deporte y la mano</b> con la que se juega (arriba). Los dos videos deben ser de jugadores que usen la <b>misma mano</b>.</li>
+    <li><b>Panel izquierdo (<span class="c-ref">azul</span>) – Referencia:</b> pulsa <i>Subir video de referencia</i> y elige un video de un golpe bien hecho (por ejemplo, de un profesional o de un buen golpe tuyo).</li>
+    <li><b>Marca el momento del impacto en la referencia</b> (opcional): pausa el video justo cuando la paleta/raqueta toca la bola y pulsa <i>Usar este cuadro como referencia</i>. Si no lo haces, el programa lo busca solo (el instante de mayor velocidad de la muñeca) o puedes pulsar <i>Detectar golpe automático</i>.</li>
+    <li><b>Panel derecho (<span class="c-usr">verde</span>) – Tu golpe:</b> pulsa <i>Subir video</i> con el golpe a analizar, o <i>Cámara en vivo</i> (permite el acceso a la cámara). Con <i>Cámara: trasera/frontal</i> eliges cuál usar.</li>
+    <li><b>Compara a simple vista</b> con los botones ▶ <i>Reproducir ambos</i>, ⏸ <i>Pausar</i>, ⏮ <i>Inicio</i> y la <i>Velocidad</i> (0.25× o 0.5× sirve para ver el golpe en cámara lenta). Verás el esqueleto y los ángulos sobre cada cuerpo.</li>
+    <li><b>Pulsa el botón grande «Analizar y ver recomendaciones».</b> El programa recorre el video (tarda unos segundos), encuentra el impacto, lo compara con la referencia y <b>abajo aparecen la tabla de ángulos y las recomendaciones</b>.</li>
+    <li><b>¿El impacto detectado no es el correcto?</b> Pausa tu video exactamente en el cuadro del impacto y pulsa <i>Analizar este cuadro</i> (panel derecho). Con la cámara en vivo: haz el golpe y pulsa <i>Analizar</i> dentro de los 4 segundos siguientes.</li>
+    <li><b>Exportar resumen</b> guarda un archivo .txt con los ángulos y las recomendaciones.</li>
+  </ol>
+  <h3>Para que la comparación sea confiable</h3>
+  <ul>
+    <li>Filma <b>los dos videos desde el mismo ángulo</b> (ambos de lado, o ambos de frente) y a distancia parecida.</li>
+    <li>Que se vea el <b>cuerpo completo</b>, con buena luz y la cámara quieta (trípode o apoyada).</li>
+    <li>Un solo golpe (o pocos) por video; ropa que contraste con el fondo.</li>
+    <li>Las recomendaciones son orientativas (se calculan con ángulos 2D). Confírmalas con un entrenador.</li>
+  </ul>
+</details>
 
 <div class="grid">
   <label>Deporte
@@ -51,26 +109,69 @@
   </label>
 </div>
 
-<div class="grid botones" style="margin-top:10px">
-  <button id="btnCamara" class="ok">Cámara en vivo</button>
-  <button id="btnSubir">Subir video</button>
-  <button id="btnCambiar">Cámara: trasera</button>
-  <button id="btnRef">Marcar golpe de referencia</button>
-  <button id="btnImpacto">Analizar impacto</button>
-  <button id="btnExportar">Exportar resumen</button>
-</div>
-<input id="archivo" type="file" accept="video/*" hidden>
+<div class="comparador">
+  <!-- IZQUIERDA: video de referencia -->
+  <section class="panel izq">
+    <h2>① Referencia (golpe correcto)</h2>
+    <div class="botones">
+      <button id="btnSubirRef" class="ref">Subir video de referencia</button>
+      <button id="btnMarcarRef">Usar este cuadro como referencia</button>
+      <button id="btnAutoRef">Detectar golpe automático</button>
+    </div>
+    <input id="archivoRef" type="file" accept="video/*" hidden>
+    <div class="stage" id="stage-ref">
+      <video id="video-ref" playsinline muted></video>
+      <canvas id="overlay-ref"></canvas>
+      <div class="vacio" id="vacio-ref">Pulsa <b>&nbsp;Subir video de referencia&nbsp;</b> para cargar el golpe modelo.</div>
+    </div>
+    <div class="st" id="status-ref"></div>
+    <div class="angulos" id="ang-ref"></div>
+  </section>
 
-<div id="stage">
-  <video id="video" playsinline muted></video>
-  <canvas id="overlay"></canvas>
-  <div id="vacio">Pulsa <b>Cámara en vivo</b> o <b>Subir video</b> para empezar.</div>
+  <!-- DERECHA: video a analizar -->
+  <section class="panel der">
+    <h2>② Tu golpe (a analizar)</h2>
+    <div class="botones">
+      <button id="btnSubirUsr" class="ok">Subir video</button>
+      <button id="btnCamara">Cámara en vivo</button>
+      <button id="btnCambiar">Cámara: trasera</button>
+      <button id="btnCuadro">Analizar este cuadro</button>
+    </div>
+    <input id="archivoUsr" type="file" accept="video/*" hidden>
+    <div class="stage" id="stage-usr">
+      <video id="video-usr" playsinline muted></video>
+      <canvas id="overlay-usr"></canvas>
+      <div class="vacio" id="vacio-usr">Pulsa <b>&nbsp;Subir video&nbsp;</b> o <b>&nbsp;Cámara en vivo&nbsp;</b> para empezar.</div>
+    </div>
+    <div class="st" id="status-usr"></div>
+    <div class="angulos" id="ang-usr"></div>
+  </section>
 </div>
-<div id="status"></div>
-<div class="angulos" id="angulos"></div>
 
-<h2>Resumen</h2>
-<textarea id="resumen" readonly placeholder="El resumen aparecerá aquí al analizar el impacto."></textarea>
+<div class="controles">
+  <button id="btnPlay">▶ Reproducir ambos</button>
+  <button id="btnPause">⏸ Pausar ambos</button>
+  <button id="btnInicio">⏮ Inicio</button>
+  <label>Velocidad
+    <select id="velocidad">
+      <option value="1">1×</option>
+      <option value="0.5">0.5×</option>
+      <option value="0.25">0.25×</option>
+    </select>
+  </label>
+</div>
+
+<button id="btnAnalizar" class="ok grande">Analizar y ver recomendaciones</button>
+<div id="estado"></div>
+
+<section id="resultados">
+  <h2>Resultados y recomendaciones</h2>
+  <div id="resContenido"><p class="vacioRes">Aquí aparecerán la comparación de ángulos y las recomendaciones cuando pulses <b>Analizar y ver recomendaciones</b>.</p></div>
+</section>
+
+<h2 style="margin-top:16px">Resumen en texto</h2>
+<textarea id="resumen" readonly placeholder="El resumen aparecerá aquí al analizar."></textarea>
+<button id="btnExportar" style="width:100%; margin-top:8px">Exportar resumen (.txt)</button>
 
 <script type="module">
 /* ===================== LIBRERÍA Y CONFIGURACIÓN ===================== */
@@ -83,15 +184,16 @@ const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmark
 const CACHE_MODELO = "postura-modelo-v1";
 const FPS_ANALISIS = 15;   // cuadros por segundo al recorrer un video grabado
 const VENTANA_VIVO = 4;    // segundos de historial en vivo donde buscar el impacto
+const TOL_OK = 8;          // diferencia (°) hasta la cual el ángulo se considera bien
+const TOL_ALTA = 15;       // por encima de esta diferencia (°) se marca como "corregir"
 
 // Textos por deporte: SOLO cambian las palabras del resumen, no la lógica.
 const DEPORTES = {
-  mesa:  { titulo: "Tenis de mesa",  golpe: "drive / loop / topspin de tenis de mesa" },
-  campo: { titulo: "Tenis de campo", golpe: "derecha / revés / saque de tenis de campo" }
+  mesa:  { titulo: "Tenis de mesa",  golpe: "drive / loop / topspin de tenis de mesa", impl: "paleta" },
+  campo: { titulo: "Tenis de campo", golpe: "derecha / revés / saque de tenis de campo", impl: "raqueta" }
 };
 
 // Índices de landmarks de MediaPipe Pose (33 puntos).
-// 11/12 hombros, 13/14 codos, 15/16 muñecas, 23/24 caderas, 25/26 rodillas, 27/28 tobillos.
 const LADO = {
   izq: { hombro: 11, codo: 13, muneca: 15, cadera: 23, rodilla: 25, tobillo: 27 },
   der: { hombro: 12, codo: 14, muneca: 16, cadera: 24, rodilla: 26, tobillo: 28 }
@@ -103,53 +205,70 @@ const ANGULOS = [
   ["rodillaDer", "Flexión rodilla derecha"],
   ["caderaIzq",  "Flexión cadera izquierda"],
   ["caderaDer",  "Flexión cadera derecha"],
-  ["codo",       "Ángulo del codo (paleta)"],
+  ["codo",       "Ángulo del codo (brazo de golpeo)"],
   ["tronco",     "Inclinación del tronco"],
   ["hombros",    "Rotación de hombros"]
 ];
 
 /* ===================== ESTADO Y ELEMENTOS ===================== */
 const $ = id => document.getElementById(id);
-const video = $("video"), canvas = $("overlay"), ctx = canvas.getContext("2d"), stage = $("stage");
 
-let landmarker = null;      // detector de pose de MediaPipe
-let stream = null;          // stream de la cámara
-let facing = "environment"; // cámara trasera por defecto
-let mode = null;            // "live" | "file" | null
-let samples = [];           // muestras { t, a (ángulos), wrist (muñeca de la paleta) }
-let ref = null;             // ángulos del golpe de referencia
-let impacto = null;         // resultado del análisis de impacto
-let lastFrame = null;       // último cuadro detectado { lm, s }
-let scanning = false, scanDone = false, cancelScan = false;
-let congelado = false;      // cámara en vivo congelada al marcar la referencia
-let necesitaCuadro = false; // forzar un cuadro nuevo tras mover el video (seeked)
-let lastTs = 0;             // MediaPipe exige timestamps crecientes en modo VIDEO
-let fileUrl = null;
+// Cada panel (referencia / usuario) tiene su propio video, lienzo y detector de pose.
+function crearPanel(id, color, esReferencia) {
+  const p = {
+    id, color, esReferencia,
+    stage: $("stage-" + id), video: $("video-" + id), canvas: $("overlay-" + id),
+    vacio: $("vacio-" + id), statusEl: $("status-" + id), angEl: $("ang-" + id),
+    landmarker: null,        // detector de pose de MediaPipe (uno por panel: guarda su propio seguimiento)
+    stream: null,            // stream de la cámara (solo panel de usuario)
+    facing: "environment",   // cámara trasera por defecto
+    mode: null,              // "live" | "file" | null
+    samples: [],             // muestras { t, a (ángulos), wrist }
+    impacto: null,           // { muestra, velocidad }
+    lastFrame: null,         // último cuadro detectado { lm, s }
+    scanning: false, scanDone: false, cancelScan: false,
+    necesitaCuadro: false,   // forzar un cuadro nuevo tras mover el video (seeked)
+    lastTs: 0,               // MediaPipe exige timestamps crecientes en modo VIDEO
+    lastDet: 0,              // para limitar la frecuencia de detección
+    fileUrl: null
+  };
+  p.ctx = p.canvas.getContext("2d");
+  // Ajusta el lienzo al tamaño real del video para que el esqueleto coincida.
+  p.video.addEventListener("loadedmetadata", () => {
+    p.canvas.width = p.video.videoWidth;
+    p.canvas.height = p.video.videoHeight;
+  });
+  p.video.addEventListener("seeked", () => { p.necesitaCuadro = true; });
+  return p;
+}
+const R = crearPanel("ref", "#38bdf8", true);    // izquierda
+const U = crearPanel("usr", "#22c55e", false);   // derecha
+const paneles = [R, U];
+
+let ref = null;        // { a: ángulos, t, origen } del golpe de referencia
+let resultado = null;  // { a: ángulos, t, velocidad } del golpe analizado
+let ocupado = false;   // evita lanzar dos análisis a la vez
 
 /* ===================== UTILIDADES ===================== */
-const setStatus = t => $("status").textContent = t;
+const estado = t => $("estado").textContent = t;
+const setPanel = (p, t) => p.statusEl.textContent = t;
 const rad2deg = r => r * 180 / Math.PI;
-// Punto visible y con suficiente confianza
-const vis = p => !!p && (p.visibility ?? 1) > 0.5;
-// Punto medio entre dos puntos (o null si falta alguno)
+const vis = p => !!p && (p.visibility ?? 1) > 0.5;                       // punto visible y confiable
 const mid = (p, q) => (p && q) ? { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 } : null;
 const fmt = v => v == null ? "—" : v.toFixed(1) + "°";
 const signo = v => (v > 0 ? "+" : "") + v.toFixed(1) + "°";
 const dif = (a, b) => (a == null || b == null) ? null : a - b;
-// Timestamp creciente para detectForVideo
-const nextTs = () => (lastTs = Math.max(lastTs + 1, performance.now()));
+const nextTs = p => (p.lastTs = Math.max(p.lastTs + 1, performance.now()));
 
 /* ===================== ÁNGULOS ===================== */
 
-// Ángulo INTERNO en el vértice b, formado por los segmentos b→a y b→c, en grados (0–180).
-// Ejemplo: rodilla estirada ≈ 180°; muy doblada ≈ 40°.
+// Ángulo INTERNO en el vértice b, formado por b→a y b→c, en grados (0–180).
 function anguloInterno(a, b, c) {
   if (!a || !b || !c) return null;
   const v1 = { x: a.x - b.x, y: a.y - b.y };
   const v2 = { x: c.x - b.x, y: c.y - b.y };
   const denom = Math.hypot(v1.x, v1.y) * Math.hypot(v2.x, v2.y);
   if (!denom) return null;
-  // Producto punto → coseno del ángulo; se recorta a [-1, 1] por errores de redondeo
   const cos = Math.min(1, Math.max(-1, (v1.x * v2.x + v1.y * v2.y) / denom));
   return rad2deg(Math.acos(cos));
 }
@@ -157,55 +276,55 @@ function anguloInterno(a, b, c) {
 // "Flexión" = cuánto se dobla la articulación: 0° = recta, 180° = doblada al máximo.
 const flexion = interno => interno == null ? null : 180 - interno;
 
-// Calcula todos los ángulos pedidos para un cuadro.
-// "aspect" (ancho/alto del video) corrige la deformación, porque los landmarks
-// vienen normalizados en x e y por separado.
+// Calcula todos los ángulos de un cuadro. "aspect" (ancho/alto) corrige la deformación
+// porque los landmarks vienen normalizados en x e y por separado.
 function calcularAngulos(lm, mano, aspect) {
   const P = i => vis(lm[i]) ? { x: lm[i].x * aspect, y: lm[i].y } : null;
-  const brazo = mano === "derecha" ? LADO.der : LADO.izq;  // brazo de la paleta
-  const sMed = mid(P(11), P(12));  // punto medio de hombros
-  const hMed = mid(P(23), P(24));  // punto medio de caderas
+  const brazo = mano === "derecha" ? LADO.der : LADO.izq;
+  const sMed = mid(P(11), P(12));
+  const hMed = mid(P(23), P(24));
   const hIzq = P(11), hDer = P(12);
+
+  // Inclinación del tronco respecto a la vertical, en magnitud (0° = erguido).
+  // Se usa magnitud para poder comparar videos filmados desde lados opuestos.
+  const tronco = (sMed && hMed) ? Math.abs(rad2deg(Math.atan2(sMed.x - hMed.x, -(sMed.y - hMed.y)))) : null;
+
+  // Hombros: línea del hombro izq. al der. respecto a la horizontal, plegada a 0–90° (magnitud).
+  let hombros = null;
+  if (hIzq && hDer) {
+    let g = rad2deg(Math.atan2(hDer.y - hIzq.y, hDer.x - hIzq.x));
+    if (g > 90) g -= 180; else if (g < -90) g += 180;
+    hombros = Math.abs(g);
+  }
   return {
-    // Rodilla: ángulo cadera–rodilla–tobillo
     rodillaIzq: flexion(anguloInterno(P(23), P(25), P(27))),
     rodillaDer: flexion(anguloInterno(P(24), P(26), P(28))),
-    // Cadera: ángulo hombro–cadera–rodilla
-    caderaIzq: flexion(anguloInterno(P(11), P(23), P(25))),
-    caderaDer: flexion(anguloInterno(P(12), P(24), P(26))),
-    // Codo de la paleta: hombro–codo–muñeca (es el ángulo interno directo)
+    caderaIzq:  flexion(anguloInterno(P(11), P(23), P(25))),
+    caderaDer:  flexion(anguloInterno(P(12), P(24), P(26))),
     codo: anguloInterno(P(brazo.hombro), P(brazo.codo), P(brazo.muneca)),
-    // Tronco: línea caderas→hombros respecto a la vertical (0° = erguido; + = inclinado a la derecha de la imagen)
-    tronco: (sMed && hMed) ? rad2deg(Math.atan2(sMed.x - hMed.x, -(sMed.y - hMed.y))) : null,
-    // Hombros: línea del hombro izq. al der. respecto a la horizontal (0° = nivelados)
-    hombros: (hIzq && hDer) ? rad2deg(Math.atan2(hDer.y - hIzq.y, hDer.x - hIzq.x)) : null
+    tronco, hombros
   };
 }
 
 // Crea una muestra: ángulos del cuadro + posición de la muñeca de la paleta.
-function muestra(lm, t) {
-  const aspect = (video.videoWidth / video.videoHeight) || 16 / 9;
+function muestra(p, lm, t) {
+  const aspect = (p.video.videoWidth / p.video.videoHeight) || 16 / 9;
   const mano = $("mano").value;
   const w = lm[(mano === "derecha" ? LADO.der : LADO.izq).muneca];
-  return {
-    t,
-    a: calcularAngulos(lm, mano, aspect),
-    wrist: vis(w) ? { x: w.x * aspect, y: w.y } : null
-  };
+  return { t, a: calcularAngulos(lm, mano, aspect), wrist: vis(w) ? { x: w.x * aspect, y: w.y } : null };
 }
 
 /* ===================== IMPACTO ===================== */
 
-// Impacto aproximado = cuadro en que la muñeca de la paleta alcanza su velocidad máxima.
-// Velocidad = distancia entre muestras consecutivas / tiempo transcurrido.
+// Impacto aproximado = cuadro en que la muñeca alcanza su velocidad máxima.
 function buscarImpacto(lista) {
   let mejor = null, mayor = -1;
   for (let i = 1; i < lista.length; i++) {
-    const p = lista[i - 1], c = lista[i];
-    if (!p.wrist || !c.wrist) continue;
-    const dt = c.t - p.t;
-    if (dt <= 0.005) continue;   // evita dividir entre casi cero
-    const v = Math.hypot(c.wrist.x - p.wrist.x, c.wrist.y - p.wrist.y) / dt;
+    const a = lista[i - 1], c = lista[i];
+    if (!a.wrist || !c.wrist) continue;
+    const dt = c.t - a.t;
+    if (dt <= 0.005) continue;
+    const v = Math.hypot(c.wrist.x - a.wrist.x, c.wrist.y - a.wrist.y) / dt;
     if (v > mayor) { mayor = v; mejor = { muestra: c, velocidad: v }; }
   }
   return mejor;
@@ -213,36 +332,33 @@ function buscarImpacto(lista) {
 
 /* ===================== DETECCIÓN Y DIBUJO ===================== */
 
-// Detecta la pose en el cuadro actual del video. Devuelve los landmarks o null.
-function detectar() {
-  if (!landmarker || video.readyState < 2) return null;
-  const res = landmarker.detectForVideo(video, nextTs());
+function detectar(p) {
+  if (!p.landmarker || p.video.readyState < 2) return null;
+  const res = p.landmarker.detectForVideo(p.video, nextTs(p));
   return res.landmarks?.[0] ?? null;
 }
 
-// Dibuja el esqueleto y los ángulos sobre el video.
-function dibujar(lm, s) {
+// Dibuja el esqueleto y los ángulos sobre el video del panel.
+function dibujar(p, lm, s) {
+  const { ctx, canvas } = p;
   const W = canvas.width, H = canvas.height;
-  const flip = mode === "live" && facing === "user";  // espejo para la cámara frontal
+  const flip = p.mode === "live" && p.facing === "user";
   const X = x => (flip ? 1 - x : x) * W, Y = y => y * H;
   const brazo = $("mano").value === "derecha" ? LADO.der : LADO.izq;
   ctx.clearRect(0, 0, W, H);
 
-  // Líneas entre articulaciones (conexiones oficiales de MediaPipe)
-  ctx.strokeStyle = "#22c55e";
+  ctx.strokeStyle = p.color;
   ctx.lineWidth = Math.max(2, W / 320);
   for (const c of PoseLandmarker.POSE_CONNECTIONS) {
     const a = c.start ?? c[0], b = c.end ?? c[1];
-    const p = lm[a], q = lm[b];
-    if (!vis(p) || !vis(q)) continue;
-    ctx.beginPath(); ctx.moveTo(X(p.x), Y(p.y)); ctx.lineTo(X(q.x), Y(q.y)); ctx.stroke();
+    const pa = lm[a], pb = lm[b];
+    if (!vis(pa) || !vis(pb)) continue;
+    ctx.beginPath(); ctx.moveTo(X(pa.x), Y(pa.y)); ctx.lineTo(X(pb.x), Y(pb.y)); ctx.stroke();
   }
-  // Puntos de cada landmark
   ctx.fillStyle = "#f8fafc";
-  for (const p of lm) if (vis(p)) {
-    ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), Math.max(3, W / 220), 0, Math.PI * 2); ctx.fill();
+  for (const pt of lm) if (vis(pt)) {
+    ctx.beginPath(); ctx.arc(X(pt.x), Y(pt.y), Math.max(3, W / 220), 0, Math.PI * 2); ctx.fill();
   }
-  // Etiquetas con los ángulos junto a rodillas, caderas y codo de la paleta
   ctx.font = `bold ${Math.max(13, W / 40)}px system-ui, sans-serif`;
   ctx.lineWidth = 3; ctx.strokeStyle = "#000"; ctx.fillStyle = "#fde047";
   const etiquetas = [
@@ -251,30 +367,21 @@ function dibujar(lm, s) {
     [brazo.codo, s.a.codo]
   ];
   for (const [idx, val] of etiquetas) {
-    const p = lm[idx];
-    if (!vis(p) || val == null) continue;
+    const pt = lm[idx];
+    if (!vis(pt) || val == null) continue;
     const txt = val.toFixed(0) + "°";
-    ctx.strokeText(txt, X(p.x) + 8, Y(p.y) - 8);
-    ctx.fillText(txt, X(p.x) + 8, Y(p.y) - 8);
+    ctx.strokeText(txt, X(pt.x) + 8, Y(pt.y) - 8);
+    ctx.fillText(txt, X(pt.x) + 8, Y(pt.y) - 8);
   }
 }
 
-// Muestra los ángulos en pantalla. Si hay referencia, muestra también la diferencia en grados.
-function mostrarAngulos(s) {
-  let html = ANGULOS.map(([k, etq]) => `<span>${etq}</span><b>${fmt(s.a[k])}</b>`).join("");
-  if (ref) {
-    html += `<span class="sep">Diferencia con la referencia</span>`;
-    html += ANGULOS.map(([k, etq]) => {
-      const d = dif(s.a[k], ref[k]);
-      return `<span>${etq}</span><b>${d == null ? "—" : signo(d)}</b>`;
-    }).join("");
-  }
-  $("angulos").innerHTML = html;
+// Lista compacta de ángulos del cuadro actual, debajo de cada video.
+function mostrarAngulos(p, s) {
+  p.angEl.innerHTML = ANGULOS.map(([k, etq]) => `<span>${etq}</span><b>${fmt(s.a[k])}</b>`).join("");
 }
 
-// Mantiene solo los últimos VENTANA_VIVO segundos en vivo.
-function recortarBuffer(t) {
-  while (samples.length && samples[0].t < t - VENTANA_VIVO) samples.shift();
+function recortarBuffer(p, t) {
+  while (p.samples.length && p.samples[0].t < t - VENTANA_VIVO) p.samples.shift();
 }
 
 /* ===================== MODELO (CON CACHÉ) ===================== */
@@ -291,253 +398,434 @@ async function obtenerModelo() {
     }
     return new Uint8Array(await resp.arrayBuffer());
   } catch {
-    // Si Cache Storage no está disponible, se descarga sin caché
     const resp = await fetch(MODEL_URL);
     return new Uint8Array(await resp.arrayBuffer());
   }
 }
 
-// Crea el PoseLandmarker en modo VIDEO. Prueba GPU y, si falla, usa CPU.
-async function cargarModelo() {
-  setStatus("Cargando modelo de pose (solo la primera vez)…");
-  const fileset = await FilesetResolver.forVisionTasks(WASM_URL);
-  const bytes = await obtenerModelo();
+// Librería y modelo se cargan una sola vez y se comparten entre los dos paneles.
+let basePromise = null;
+function cargarBase() {
+  if (!basePromise) {
+    basePromise = (async () => {
+      const fileset = await FilesetResolver.forVisionTasks(WASM_URL);
+      const bytes = await obtenerModelo();
+      return { fileset, bytes };
+    })();
+    basePromise.catch(() => { basePromise = null; });
+  }
+  return basePromise;
+}
+
+// Crea el PoseLandmarker del panel en modo VIDEO. Prueba GPU y, si falla, usa CPU.
+async function asegurarLandmarker(p) {
+  if (p.landmarker) return;
+  estado("Cargando modelo de pose (solo la primera vez)…");
+  const { fileset, bytes } = await cargarBase();
   const opciones = delegate => ({
     baseOptions: { modelAssetBuffer: bytes.slice(), delegate },
-    runningMode: "VIDEO",
-    numPoses: 1,
-    minPoseDetectionConfidence: 0.5,
-    minPosePresenceConfidence: 0.5,
-    minTrackingConfidence: 0.5
+    runningMode: "VIDEO", numPoses: 1,
+    minPoseDetectionConfidence: 0.5, minPosePresenceConfidence: 0.5, minTrackingConfidence: 0.5
   });
-  try { landmarker = await PoseLandmarker.createFromOptions(fileset, opciones("GPU")); }
-  catch { landmarker = await PoseLandmarker.createFromOptions(fileset, opciones("CPU")); }
-  setStatus("Modelo listo.");
+  try { p.landmarker = await PoseLandmarker.createFromOptions(fileset, opciones("GPU")); }
+  catch { p.landmarker = await PoseLandmarker.createFromOptions(fileset, opciones("CPU")); }
+  estado("");
 }
 
 /* ===================== CÁMARA Y VIDEO ===================== */
 
-// Abre la cámara (trasera por defecto) y empieza el análisis en vivo.
+// Abre la cámara (solo panel de usuario).
 async function abrirCamara() {
   try {
-    if (!landmarker) await cargarModelo();
-    detenerFuente();
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } },
+    await asegurarLandmarker(U);
+    detenerFuente(U);
+    U.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: U.facing }, width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false
     });
-    mode = "live";
-    video.removeAttribute("src");
-    video.controls = false;
-    video.srcObject = stream;
-    stage.classList.toggle("front", facing === "user");
-    $("vacio").style.display = "none";
-    await video.play();
-    samples = []; impacto = null; congelado = false;
-    setStatus("Cámara activa. Ponte de lado, con el cuerpo completo visible.");
+    U.mode = "live";
+    U.video.removeAttribute("src");
+    U.video.controls = false;
+    U.video.srcObject = U.stream;
+    U.stage.classList.toggle("front", U.facing === "user");
+    U.vacio.style.display = "none";
+    await U.video.play();
+    U.samples = []; U.impacto = null; resultado = null;
+    setPanel(U, "Cámara activa. Ponte de lado, con el cuerpo completo visible. Haz el golpe y pulsa «Analizar».");
   } catch (e) {
-    setStatus("No se pudo usar la cámara: " + e.message + ". Revisa que la página esté en HTTPS y que diste permiso.");
+    setPanel(U, "No se pudo usar la cámara: " + e.message + ". Revisa que la página esté en HTTPS y que diste permiso.");
   }
 }
 
-// Apaga la cámara o detiene el video actual.
-function detenerFuente() {
-  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-  video.srcObject = null;
-  if (scanning) cancelScan = true;
-  congelado = false;
-  lastFrame = null;
+function detenerFuente(p) {
+  if (p.stream) { p.stream.getTracks().forEach(t => t.stop()); p.stream = null; }
+  p.video.srcObject = null;
+  if (p.scanning) p.cancelScan = true;
+  p.lastFrame = null;
 }
 
-// Alterna entre cámara trasera y frontal.
 async function cambiarCamara() {
-  facing = facing === "environment" ? "user" : "environment";
-  $("btnCambiar").textContent = facing === "user" ? "Cámara: frontal" : "Cámara: trasera";
-  if (mode === "live") await abrirCamara();
-  else setStatus("Cámara elegida: " + (facing === "user" ? "frontal" : "trasera") + ". Se usará al abrir la cámara en vivo.");
+  U.facing = U.facing === "environment" ? "user" : "environment";
+  $("btnCambiar").textContent = U.facing === "user" ? "Cámara: frontal" : "Cámara: trasera";
+  if (U.mode === "live") await abrirCamara();
+  else setPanel(U, "Cámara elegida: " + (U.facing === "user" ? "frontal" : "trasera") + ". Se usará al abrir la cámara en vivo.");
 }
 
-// Carga un video grabado desde el dispositivo.
-function cargarArchivo(file) {
-  detenerFuente();
-  if (fileUrl) URL.revokeObjectURL(fileUrl);
-  fileUrl = URL.createObjectURL(file);
-  mode = "file";
-  stage.classList.remove("front");
-  video.src = fileUrl;
-  video.controls = true;
-  video.muted = true;
-  $("vacio").style.display = "none";
-  samples = []; scanDone = false; impacto = null;
-  setStatus("Video cargado. Pausa en un buen golpe para marcarlo, o pulsa Analizar impacto.");
-  video.play().catch(() => {});
+// Carga un video grabado en el panel indicado. Queda en pausa en el primer cuadro.
+function cargarArchivo(p, file) {
+  detenerFuente(p);
+  if (p.fileUrl) URL.revokeObjectURL(p.fileUrl);
+  p.fileUrl = URL.createObjectURL(file);
+  p.mode = "file";
+  p.stage.classList.remove("front");
+  p.video.src = p.fileUrl;
+  p.video.controls = true;
+  p.video.muted = true;
+  p.video.playbackRate = parseFloat($("velocidad").value);
+  p.vacio.style.display = "none";
+  p.samples = []; p.scanDone = false; p.impacto = null;
+  p.ctx.clearRect(0, 0, p.canvas.width, p.canvas.height);
+  p.angEl.innerHTML = "";
+  if (p.esReferencia) ref = null; else resultado = null;
+  mostrarResultados();
+  setPanel(p, p.esReferencia
+    ? "Referencia cargada. Pausa en el impacto y pulsa «Usar este cuadro», o deja que se detecte sola."
+    : "Video cargado. Pulsa «Analizar y ver recomendaciones».");
+  // Carga el detector y dibuja el primer cuadro
+  asegurarLandmarker(p).then(() => { p.necesitaCuadro = true; }).catch(e => setPanel(p, "Error al cargar el modelo: " + e.message));
 }
 
 // Lleva el video a un instante y espera a que el cuadro esté listo.
-function irA(t) {
+function irA(p, t) {
   return new Promise(resolve => {
-    if (Math.abs(video.currentTime - t) < 0.001) return resolve();
-    const fin = () => { video.removeEventListener("seeked", fin); resolve(); };
-    video.addEventListener("seeked", fin);
-    video.currentTime = t;
-    setTimeout(fin, 2000);   // por si el navegador no dispara "seeked"
+    if (Math.abs(p.video.currentTime - t) < 0.001) return resolve();
+    const fin = () => { p.video.removeEventListener("seeked", fin); resolve(); };
+    p.video.addEventListener("seeked", fin);
+    p.video.currentTime = t;
+    setTimeout(fin, 2000);
   });
 }
 
-// Recorre todo el video cuadro por cuadro (a FPS_ANALISIS) y guarda los ángulos de cada uno.
-async function escanearVideo() {
-  if (!isFinite(video.duration) || video.duration <= 0) {
-    return setStatus("No se pudo leer la duración del video.");
+// Recorre todo el video cuadro por cuadro y guarda los ángulos de cada uno.
+async function escanear(p) {
+  if (!isFinite(p.video.duration) || p.video.duration <= 0) {
+    setPanel(p, "No se pudo leer la duración del video."); return;
   }
-  if (!landmarker) await cargarModelo();
-  scanning = true; cancelScan = false; scanDone = false;
-  samples = [];
-  video.pause();
+  await asegurarLandmarker(p);
+  p.scanning = true; p.cancelScan = false; p.scanDone = false;
+  p.samples = [];
+  p.video.pause();
   const paso = 1 / FPS_ANALISIS;
-  const total = Math.floor(video.duration / paso);
-  for (let i = 0; i <= total && !cancelScan; i++) {
+  const total = Math.floor(p.video.duration / paso);
+  for (let i = 0; i <= total && !p.cancelScan; i++) {
     const t = i * paso;
-    await irA(t);
-    const lm = detectar();
+    await irA(p, t);
+    const lm = detectar(p);
     if (lm) {
-      const s = muestra(lm, t);
-      samples.push(s);
-      dibujar(lm, s);
+      const s = muestra(p, lm, t);
+      p.samples.push(s);
+      dibujar(p, lm, s);
     }
-    setStatus(`Analizando cuadro ${i + 1} de ${total + 1}…`);
+    setPanel(p, `Analizando cuadro ${i + 1} de ${total + 1}…`);
   }
-  scanning = false;
-  scanDone = !cancelScan;
-  setStatus(scanDone
-    ? `Análisis terminado: ${samples.length} cuadros con cuerpo detectado.`
-    : "Análisis cancelado.");
+  p.scanning = false;
+  p.scanDone = !p.cancelScan;
+  setPanel(p, p.scanDone ? `Análisis terminado: ${p.samples.length} cuadros con cuerpo detectado.` : "Análisis cancelado.");
+}
+
+// Devuelve el impacto del panel (recorre el video si hace falta; en vivo usa los últimos segundos).
+async function impactoDe(p) {
+  if (p.mode === "file" && !p.scanDone) {
+    await escanear(p);
+    if (!p.scanDone) return null;
+  }
+  const imp = buscarImpacto(p.samples);
+  p.impacto = imp;
+  if (!imp) setPanel(p, "No hay datos suficientes de la muñeca. Verifica que el cuerpo y el brazo de la paleta estén visibles.");
+  return imp;
 }
 
 /* ===================== BUCLE PRINCIPAL ===================== */
 
-// Se ejecuta en cada frame de pantalla: detecta la pose y actualiza dibujo y ángulos.
+// Se ejecuta en cada frame de pantalla: detecta la pose en cada panel activo.
 function tick() {
   requestAnimationFrame(tick);
-  if (!mode || scanning || congelado) return;
-  const reproduciendo = mode === "live" || (!video.paused && !video.ended);
-  if (!reproduciendo && !necesitaCuadro) return;  // en pausa solo se actualiza al mover el video
-  necesitaCuadro = false;
-  const lm = detectar();
-  if (!lm) { ctx.clearRect(0, 0, canvas.width, canvas.height); lastFrame = null; return; }
-  const t = mode === "live" ? performance.now() / 1000 : video.currentTime;
-  const s = muestra(lm, t);
-  lastFrame = { lm, s };
-  if (mode === "live") { samples.push(s); recortarBuffer(t); }
-  dibujar(lm, s);
-  mostrarAngulos(s);
+  for (const p of paneles) paso(p);
+}
+function paso(p) {
+  if (!p.mode || p.scanning) return;
+  const reproduciendo = p.mode === "live" || (!p.video.paused && !p.video.ended);
+  if (!reproduciendo && !p.necesitaCuadro) return;   // en pausa solo se actualiza al mover el video
+  const ahora = performance.now();
+  if (!p.necesitaCuadro && ahora - p.lastDet < 30) return;   // máx. ~30 detecciones/s por panel
+  p.lastDet = ahora;
+  p.necesitaCuadro = false;
+  const lm = detectar(p);
+  if (!lm) { p.ctx.clearRect(0, 0, p.canvas.width, p.canvas.height); p.lastFrame = null; return; }
+  const t = p.mode === "live" ? ahora / 1000 : p.video.currentTime;
+  const s = muestra(p, lm, t);
+  p.lastFrame = { lm, s };
+  if (p.mode === "live") { p.samples.push(s); recortarBuffer(p, t); }
+  dibujar(p, lm, s);
+  mostrarAngulos(p, s);
 }
 tick();
 
-// Ajusta el lienzo y la proporción del recuadro al tamaño real del video.
-video.addEventListener("loadedmetadata", () => {
-  stage.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-});
-video.addEventListener("seeked", () => { necesitaCuadro = true; });
-// Al terminar un video grabado, se genera el análisis y el resumen automáticamente.
-video.addEventListener("ended", () => { if (mode === "file" && !scanDone) analizarImpacto(); });
+/* ===================== REFERENCIA ===================== */
 
-/* ===================== ACCIONES DE LOS BOTONES ===================== */
-
-// Guarda como "golpe bueno" los ángulos del cuadro actual.
-// Video: pausa y toma el cuadro visible. En vivo: congela la imagen; otra pulsación la reanuda.
-function marcarReferencia() {
-  if (!mode) return setStatus("Primero abre la cámara o sube un video.");
-  if (mode === "live" && congelado) {
-    congelado = false;
-    return setStatus("Cámara reanudada.");
-  }
-  let lm = null, s = null;
-  if (mode === "file") {
-    video.pause();
-    lm = detectar();
-    if (lm) s = muestra(lm, video.currentTime);
-  } else if (lastFrame) {
-    lm = lastFrame.lm; s = lastFrame.s;
-    congelado = true;   // pausa en vivo
-  }
-  if (!s) return setStatus("No se detectó el cuerpo en este cuadro. Ajusta la posición.");
-  ref = s.a;
-  if (mode === "file") dibujar(lm, s);
-  mostrarAngulos(s);
-  $("resumen").value = construirResumen();
-  setStatus("Golpe de referencia guardado" + (mode === "live" ? ". Imagen congelada: pulsa de nuevo para reanudar." : "."));
+// Manual: toma el cuadro que está en pantalla en el video de referencia.
+async function marcarReferencia() {
+  if (R.mode !== "file") return setPanel(R, "Primero sube el video de referencia.");
+  try { await asegurarLandmarker(R); } catch (e) { return setPanel(R, "Error al cargar el modelo: " + e.message); }
+  R.video.pause();
+  const lm = detectar(R);
+  if (!lm) return setPanel(R, "No se detectó el cuerpo en este cuadro. Mueve el video a otro cuadro.");
+  const s = muestra(R, lm, R.video.currentTime);
+  ref = { a: s.a, t: s.t, origen: "manual" };
+  dibujar(R, lm, s); mostrarAngulos(R, s);
+  setPanel(R, `Referencia guardada manualmente (t = ${s.t.toFixed(2)} s).`);
+  if (resultado) mostrarResultados();
 }
 
-// Busca el cuadro de impacto y muestra sus ángulos y la diferencia con la referencia.
-// Video: primero recorre todo el video. En vivo: usa los últimos segundos.
-async function analizarImpacto() {
-  if (!mode) return setStatus("Primero abre la cámara o sube un video.");
-  if (mode === "file" && !scanDone) {
-    await escanearVideo();
-    if (!scanDone) return;
-  }
-  impacto = buscarImpacto(samples);
-  if (!impacto) return setStatus("No hay datos suficientes de la muñeca. Verifica que el brazo de la paleta esté visible.");
-  mostrarAngulos(impacto.muestra);
-  $("resumen").value = construirResumen();
-  setStatus(`Impacto detectado en t = ${impacto.muestra.t.toFixed(2)} s.`);
+// Automático: busca el impacto (velocidad máxima de la muñeca) en el video de referencia.
+async function referenciaAuto() {
+  if (R.mode !== "file") { setPanel(R, "Primero sube el video de referencia."); return false; }
+  setPanel(R, "Buscando el golpe en el video de referencia…");
+  const imp = await impactoDe(R);
+  if (!imp) return false;
+  ref = { a: imp.muestra.a, t: imp.muestra.t, origen: "auto" };
+  await irA(R, imp.muestra.t);   // deja el video en el cuadro del impacto
+  setPanel(R, `Referencia detectada automáticamente (t = ${imp.muestra.t.toFixed(2)} s).`);
+  if (resultado) mostrarResultados();
+  return true;
 }
 
-// Genera el texto del resumen. El deporte solo cambia las palabras del texto.
+// Si aún no hay referencia pero sí hay video de referencia, la detecta sola.
+async function asegurarReferencia() {
+  if (ref) return true;
+  if (R.mode === "file") return referenciaAuto();
+  return false;
+}
+
+/* ===================== ANÁLISIS ===================== */
+
+// Botón principal: encuentra el impacto en el video del usuario y muestra comparación + recomendaciones.
+async function analizar() {
+  if (ocupado) return;
+  if (!U.mode) return estado("Primero sube tu video o abre la cámara en el panel derecho.");
+  ocupado = true; $("btnAnalizar").disabled = true;
+  try {
+    estado("Analizando… no cierres la página.");
+    await asegurarReferencia();
+    const imp = await impactoDe(U);
+    if (!imp) return estado("No se pudo detectar el impacto. Prueba con «Analizar este cuadro».");
+    resultado = { a: imp.muestra.a, t: imp.muestra.t, velocidad: imp.velocidad };
+    if (U.mode === "file") await irA(U, imp.muestra.t);
+    setPanel(U, `Impacto detectado en t = ${imp.muestra.t.toFixed(2)} s.`);
+    estado("Listo. Mira los resultados y recomendaciones más abajo.");
+    mostrarResultados(true);
+  } catch (e) {
+    estado("Error durante el análisis: " + e.message);
+  } finally {
+    ocupado = false; $("btnAnalizar").disabled = false;
+  }
+}
+
+// Analiza el cuadro que está en pantalla (para corregir el impacto a mano).
+async function analizarCuadro() {
+  if (!U.mode) return estado("Primero sube tu video o abre la cámara en el panel derecho.");
+  if (ocupado) return;
+  ocupado = true; $("btnAnalizar").disabled = true;
+  try {
+    await asegurarLandmarker(U);
+    let s = null, lm = null;
+    if (U.mode === "file") {
+      U.video.pause();
+      lm = detectar(U);
+      if (lm) s = muestra(U, lm, U.video.currentTime);
+    } else if (U.lastFrame) { lm = U.lastFrame.lm; s = U.lastFrame.s; }
+    if (!s) return setPanel(U, "No se detectó el cuerpo en este cuadro. Ajusta la posición o elige otro cuadro.");
+    dibujar(U, lm, s); mostrarAngulos(U, s);
+    await asegurarReferencia();
+    resultado = { a: s.a, t: s.t, velocidad: null, manual: true };
+    setPanel(U, `Cuadro analizado manualmente (t = ${s.t.toFixed(2)} s).`);
+    estado("Listo. Mira los resultados y recomendaciones más abajo.");
+    mostrarResultados(true);
+  } catch (e) {
+    estado("Error durante el análisis: " + e.message);
+  } finally {
+    ocupado = false; $("btnAnalizar").disabled = false;
+  }
+}
+
+/* ===================== COMPARACIÓN Y RECOMENDACIONES ===================== */
+
+// Compara ángulo por ángulo: diferencia (tuyo − referencia) y nivel (ok / medio / alto).
+function comparar() {
+  return ANGULOS.map(([k, etq]) => {
+    const r = ref ? ref.a[k] : null, u = resultado.a[k];
+    const d = dif(u, r);
+    const ad = d == null ? null : Math.abs(d);
+    const nivel = d == null ? "nd" : ad <= TOL_OK ? "ok" : ad <= TOL_ALTA ? "medio" : "alto";
+    return { k, etq, r, u, d, nivel };
+  });
+}
+
+// Texto de la recomendación para un ángulo que se aleja de la referencia.
+function consejo(it, impl) {
+  const { k, r, u, d } = it;
+  const menos = d < 0;                       // true = el ángulo tuyo es menor que el de la referencia
+  const dato = `(tú: ${fmt(u)}, referencia: ${fmt(r)})`;
+  const lado = k.endsWith("Izq") ? "izquierda" : "derecha";
+  switch (k) {
+    case "rodillaIzq": case "rodillaDer":
+      return menos
+        ? `Flexiona más la rodilla ${lado} ${dato}. Bajar un poco el centro de gravedad da estabilidad y deja que la fuerza salga desde las piernas.`
+        : `Flexionas demasiado la rodilla ${lado} ${dato}. Sube un poco: con demasiada flexión pierdes velocidad de desplazamiento y de recuperación.`;
+    case "caderaIzq": case "caderaDer":
+      return menos
+        ? `Inclínate más desde la cadera ${lado} ${dato}. Lleva el pecho algo hacia delante para una postura más activa y llegar mejor a la bola.`
+        : `Te inclinas demasiado desde la cadera ${lado} ${dato}. Endereza un poco el tronco para mantener el equilibrio y ver mejor la bola.`;
+    case "codo":
+      return menos
+        ? `Tu codo está más doblado que en la referencia ${dato}. Extiende un poco más el brazo al impactar para llegar mejor a la bola y aprovechar la palanca del brazo.`
+        : `Tu brazo está más estirado que en la referencia ${dato}. Mantén el codo algo más flexionado y suelto para controlar mejor la ${impl} y evitar tensión.`;
+    case "tronco":
+      return d > 0
+        ? `Tu tronco está más inclinado que en la referencia ${dato}. Mantenlo más erguido y estable durante el golpe.`
+        : `Tu tronco está más erguido que en la referencia ${dato}. Inclínalo un poco más para acompañar el golpe y ganar alcance.`;
+    case "hombros":
+      return menos
+        ? `Rotas menos los hombros que en la referencia ${dato}. Aumenta la rotación de hombros y tronco para sumar potencia al golpe.`
+        : `Rotas los hombros más que en la referencia ${dato}. Controla la rotación para no abrirte antes del impacto.`;
+  }
+  return "";
+}
+
+// Lista de recomendaciones ordenadas de mayor a menor diferencia.
+function recomendaciones(items) {
+  const impl = DEPORTES[$("deporte").value].impl;
+  return items
+    .filter(it => it.nivel === "medio" || it.nivel === "alto")
+    .sort((a, b) => Math.abs(b.d) - Math.abs(a.d))
+    .map(it => ({ nivel: it.nivel, texto: consejo(it, impl) }));
+}
+
+const ETQ_NIVEL = { ok: "Bien", medio: "Ajustar un poco", alto: "Corregir", nd: "Sin datos" };
+
+// Dibuja en la página la comparación y las recomendaciones.
+function mostrarResultados(desplazar = false) {
+  const cont = $("resContenido");
+  if (!resultado) {
+    cont.innerHTML = `<p class="vacioRes">Aquí aparecerán la comparación de ángulos y las recomendaciones cuando pulses <b>Analizar y ver recomendaciones</b>.</p>`;
+    $("resumen").value = "";
+    return;
+  }
+  const items = comparar();
+  let html = `<p>Impacto analizado en t = <b>${resultado.t.toFixed(2)} s</b>` +
+    (ref ? ` · referencia en t = <b>${ref.t.toFixed(2)} s</b> (${ref.origen === "manual" ? "marcada a mano" : "detectada automáticamente"}).` : ".") + `</p>`;
+
+  if (!ref) {
+    html += `<p class="nv-medio">Todavía no hay golpe de referencia, por eso no puedo comparar. Sube el video de referencia en el panel izquierdo y vuelve a pulsar «Analizar».</p>`;
+    html += `<div class="tabla-scroll"><table><tr><th>Ángulo</th><th>Tu golpe</th></tr>` +
+      items.map(it => `<tr><td>${it.etq}</td><td>${fmt(it.u)}</td></tr>`).join("") + `</table></div>`;
+  } else {
+    const evaluados = items.filter(it => it.nivel !== "nd");
+    const buenos = evaluados.filter(it => it.nivel === "ok").length;
+    html += `<p><b>${buenos} de ${evaluados.length}</b> ángulos están dentro de ±${TOL_OK}° de la referencia.</p>`;
+    html += `<div class="tabla-scroll"><table>
+      <tr><th>Ángulo</th><th>Referencia</th><th>Tu golpe</th><th>Diferencia</th><th>Estado</th></tr>` +
+      items.map(it => `<tr><td>${it.etq}</td><td>${fmt(it.r)}</td><td>${fmt(it.u)}</td>
+        <td class="nv-${it.nivel}">${it.d == null ? "—" : signo(it.d)}</td>
+        <td class="nv-${it.nivel}">${ETQ_NIVEL[it.nivel]}</td></tr>`).join("") + `</table></div>`;
+
+    const recs = recomendaciones(items);
+    html += `<h2 style="margin-top:14px">Recomendaciones</h2>`;
+    if (recs.length) {
+      html += `<ul class="reco">` + recs.map(r => `<li class="${r.nivel}">${r.texto}</li>`).join("") + `</ul>`;
+    } else if (evaluados.length) {
+      html += `<ul class="reco"><li class="ok">¡Muy bien! Tu postura en el impacto es muy parecida a la de la referencia. Sigue repitiendo el golpe con esta técnica.</li></ul>`;
+    } else {
+      html += `<p class="nv-medio">No se pudieron medir los ángulos. Revisa que el cuerpo completo se vea en ambos videos.</p>`;
+    }
+    html += `<p class="nota">Orden: primero lo que más se aleja de la referencia. Las diferencias de hasta ${TOL_OK}° se consideran normales; entre ${TOL_OK}° y ${TOL_ALTA}° conviene ajustar un poco; más de ${TOL_ALTA}° conviene corregir. Para que sea confiable, los dos videos deben estar filmados desde el mismo ángulo. Son recomendaciones orientativas: confírmalas con un entrenador.</p>`;
+  }
+  cont.innerHTML = html;
+  $("resumen").value = construirResumen();
+  if (desplazar) $("resultados").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ===================== RESUMEN Y EXPORTACIÓN ===================== */
+
 function construirResumen() {
   const dep = DEPORTES[$("deporte").value];
   const lineas = [
     `Resumen de análisis de postura: ${dep.titulo}`,
     `Tipo de golpe: ${dep.golpe}`,
-    `Mano de la paleta: ${$("mano").value}`,
-    `Fuente: ${mode === "file" ? "video grabado" : "cámara en vivo"}`
+    `Mano de la ${dep.impl}: ${$("mano").value}`,
+    `Fuente del golpe analizado: ${U.mode === "file" ? "video grabado" : "cámara en vivo"}`
   ];
-  if (!impacto) {
-    lineas.push("", "Aún no hay análisis de impacto. Pulsa 'Analizar impacto'.");
-  } else {
-    const m = impacto.muestra;
-    lineas.push(
-      `Impacto aproximado en t = ${m.t.toFixed(2)} s (velocidad máxima de la muñeca: ${impacto.velocidad.toFixed(2)} alturas de imagen por segundo).`,
-      "", "Ángulos en el impacto:"
-    );
-    for (const [k, etq] of ANGULOS) lineas.push(`- ${etq}: ${fmt(m.a[k])}`);
-    if (ref) {
-      lineas.push("", "Golpe de referencia y diferencia (impacto menos referencia):");
-      for (const [k, etq] of ANGULOS) {
-        const d = dif(m.a[k], ref[k]);
-        lineas.push(`- ${etq}: referencia ${fmt(ref[k])}, diferencia ${d == null ? "—" : signo(d)}`);
-      }
-    } else {
-      lineas.push("", "No hay golpe de referencia marcado.");
-    }
+  if (!resultado) {
+    lineas.push("", "Aún no hay análisis. Pulsa 'Analizar y ver recomendaciones'.");
+    return lineas.join("\n");
   }
-  lineas.push("", "Usa este resumen para pedir recomendaciones.");
+  const items = comparar();
+  lineas.push(`Impacto analizado en t = ${resultado.t.toFixed(2)} s.`, "", "Ángulos en el impacto:");
+  for (const it of items) lineas.push(`- ${it.etq}: ${fmt(it.u)}`);
+  if (ref) {
+    lineas.push("", `Comparación con la referencia (t = ${ref.t.toFixed(2)} s; diferencia = tuyo − referencia):`);
+    for (const it of items) lineas.push(`- ${it.etq}: referencia ${fmt(it.r)}, diferencia ${it.d == null ? "—" : signo(it.d)} → ${ETQ_NIVEL[it.nivel]}`);
+    const recs = recomendaciones(items);
+    lineas.push("", "Recomendaciones:");
+    if (recs.length) recs.forEach((r, i) => lineas.push(`${i + 1}. ${r.texto}`));
+    else lineas.push("Postura muy parecida a la referencia. ¡Sigue así!");
+  } else {
+    lineas.push("", "No hay golpe de referencia, por eso no hay comparación ni recomendaciones.");
+  }
   return lineas.join("\n");
 }
 
-// Muestra el resumen y lo descarga como archivo .txt.
 function exportarResumen() {
   const texto = construirResumen();
   $("resumen").value = texto;
   const url = URL.createObjectURL(new Blob([texto], { type: "text/plain;charset=utf-8" }));
   const a = Object.assign(document.createElement("a"), { href: url, download: "resumen-postura.txt" });
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-// Conexión de los botones y selectores
+/* ===================== CONTROLES SINCRONIZADOS ===================== */
+
+const videosArchivo = () => paneles.filter(p => p.mode === "file");
+
+$("btnPlay").onclick = () => videosArchivo().forEach(p => p.video.play().catch(() => {}));
+$("btnPause").onclick = () => videosArchivo().forEach(p => p.video.pause());
+$("btnInicio").onclick = () => videosArchivo().forEach(p => { p.video.pause(); p.video.currentTime = 0; });
+$("velocidad").onchange = e => paneles.forEach(p => { p.video.playbackRate = parseFloat(e.target.value); });
+
+/* ===================== CONEXIÓN DE BOTONES ===================== */
+
+$("btnSubirRef").onclick = () => $("archivoRef").click();
+$("archivoRef").onchange = e => { if (e.target.files[0]) cargarArchivo(R, e.target.files[0]); e.target.value = ""; };
+$("btnMarcarRef").onclick = () => marcarReferencia();
+$("btnAutoRef").onclick = async () => { if (ocupado) return; ocupado = true; try { await referenciaAuto(); } finally { ocupado = false; } };
+
+$("btnSubirUsr").onclick = () => $("archivoUsr").click();
+$("archivoUsr").onchange = e => { if (e.target.files[0]) cargarArchivo(U, e.target.files[0]); e.target.value = ""; };
 $("btnCamara").onclick = () => abrirCamara();
 $("btnCambiar").onclick = () => cambiarCamara();
-$("btnSubir").onclick = () => $("archivo").click();
-$("archivo").onchange = e => { if (e.target.files[0]) cargarArchivo(e.target.files[0]); };
-$("btnRef").onclick = () => marcarReferencia();
-$("btnImpacto").onclick = () => analizarImpacto();
+$("btnCuadro").onclick = () => analizarCuadro();
+
+$("btnAnalizar").onclick = () => analizar();
 $("btnExportar").onclick = () => exportarResumen();
-$("deporte").onchange = () => { $("resumen").value = construirResumen(); };
+$("deporte").onchange = () => mostrarResultados();
+// Cambiar la mano cambia el brazo medido: hay que volver a analizar ambos videos.
+$("mano").onchange = () => {
+  ref = null; resultado = null;
+  paneles.forEach(p => { p.scanDone = false; p.samples = []; p.impacto = null; });
+  mostrarResultados();
+  estado("Cambiaste la mano: vuelve a marcar la referencia y a pulsar «Analizar».");
+};
 
 /* ===================== SERVICE WORKER ===================== */
 // Cachea la página y las librerías para usarlas sin internet.

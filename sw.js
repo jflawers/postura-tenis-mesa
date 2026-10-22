@@ -1,8 +1,10 @@
 // sw.js: guarda en caché las librerías y el modelo para uso sin internet.
-const CACHE = "postura-v1";
+const CACHE = "postura-v2";
 
 self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
+self.addEventListener("activate", e => e.waitUntil(
+  caches.delete("postura-v1").then(() => self.clients.claim())
+));
 
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
